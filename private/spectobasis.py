@@ -22,7 +22,8 @@ def spectobasis(SM):
             SM['dirs'] = r2d * (270 - SM['dirs'])
             Sfac /= r2d
 
-    if 'S' in SM.keys():
+    if 'S' in SM.keys() and (isinstance(SM['S'], np.ndarray) and \
+                             SM['S'].size > 0):
         SM['S'] *= Sfac
 
     return SM, Sfac

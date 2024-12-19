@@ -12,6 +12,7 @@ from private.pres import pres
 from private.elev import elev
 from private.wavenumber import wavenumber
 from private.IMLM import IMLM
+from private.EMEP import EMEP
 from private.smoothspec import smoothspec
 from private.diwasp_csd import diwasp_csd
 from private.check_data import check_data
@@ -88,7 +89,7 @@ def dirspec(ID, SM, EP, Options_=None):
     ndat, szd = np.shape(ID['data'])
 
     #get resolution of FFT - if not specified, calculate a sensible value
-    if len(EP['nfft']) == 0:
+    if 'nfft' not in EP:
         nfft = int(2 ** (8 + np.round(np.log2(ID['fs']))))
         EP['nfft'] = nfft
     else:
@@ -100,11 +101,11 @@ def dirspec(ID, SM, EP, Options_=None):
     xps = np.empty((szd, szd, int(nfft / 2)), 'complex128')
     for m in range(szd):
         for n in range(szd):
-            xpstmp, Ftmp = diwasp_csd(data[:, m], data[:, n], nfft, ID['fs'])
+            xpstmp, Ftmp = diwasp_csd(data[:, m], data[:, n],
+                                      nfft, ID['fs'], flag=2)
             xps[m, n, :] = xpstmp[1:int(nfft / 2) + 1]
     F = Ftmp[1:int(nfft / 2) + 1]
     nf = int(nfft / 2)
-
     print('wavenumbers')
     wns = wavenumber(2  * np.pi * F, ID['depth'] * np.ones(np.shape(F)))
     pidirs = np.linspace(-np.pi, np.pi - 2 * np.pi / EP['dres'],
@@ -143,7 +144,7 @@ def dirspec(ID, SM, EP, Options_=None):
 
     #Interpolate onto user specified matrix
     print('\ninterpolating onto specified matrix...\n')
-    SMout = interpspec(SM1, SM)
+    SMout = interpspec(SM1, SM, method='linear')
 
     #smooth spectrum
     if EP['smooth'].upper() == 'ON':
